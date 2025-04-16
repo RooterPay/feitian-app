@@ -1,0 +1,76 @@
+plugins {
+    id 'com.android.application'
+    id 'org.jetbrains.kotlin.android'
+}
+
+static def releaseDate() {
+    return new Date().format("yyyyMMdd", TimeZone.getTimeZone("GMT+8"))
+}
+
+
+android {
+    namespace 'me.dvabi.terminal'
+    compileSdk 35
+    
+    buildFeatures {
+        viewBinding = true
+        buildConfig = true
+    }
+
+    defaultConfig {
+        applicationId "me.dvabi.terminal"
+        minSdkVersion 28
+        targetSdkVersion 35
+        versionCode 201110000
+        versionName "V2.0.1.11_00_${releaseDate()}.00"
+
+    }
+    signingConfigs {
+        release {
+            storeFile file("../keystore/ftdemo.jks")
+            storePassword "123456"
+            keyAlias "ftdemo"
+            keyPassword "123456"
+            v1SigningEnabled true
+            v2SigningEnabled true
+        }
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+        debug {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+
+    lintOptions {
+        abortOnError false
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    kotlinOptions {
+        jvmTarget = '1.8'
+    }
+
+    applicationVariants.all { variant ->
+        variant.outputs.all {
+            def apkName = "FT_EMVDemo_${defaultConfig.versionName}.apk"
+            outputFileName = apkName
+        }
+    }
+}
+
+dependencies {
+    implementation fileTree(include: ['*.jar', '*.aar'], dir: 'libs')
+    implementation 'androidx.appcompat:appcompat:1.7.0'
+    implementation 'com.google.android.material:material:1.12.0'
+    implementation 'androidx.core:core-ktx:1.15.0'
+    implementation 'io.github.binaryfoo:emv-bertlv:0.1.8'
+}

@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/layout_root"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:id="@+id/ll_content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@id/ll_keyboard"
+        android:background="@color/colorLlBg"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="8dp"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/id_btn_cancel"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:gravity="center"
+                android:text="Cancel" />
+
+            <TextView
+                android:id="@+id/id_tv_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="3"
+                android:gravity="center"
+                android:text=""
+                android:textSize="26dp"
+                android:textStyle="bold" />
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/id_tv_amount"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="20dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginRight="20dp"
+            android:layout_marginBottom="10dp"
+            android:background="@drawable/shape_amount_bg"
+            android:gravity="center"
+            android:text=""
+            android:textColor="@color/colorClearBg"
+            android:textSize="20dp"
+            android:textStyle="bold" />
+
+
+        <TextView
+            android:id="@+id/id_tv_tips"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="20dp"
+            android:layout_marginTop="8dp"
+            android:text=""
+            android:textSize="18dp" />
+
+        <TextView
+            android:id="@+id/id_tv_pass"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            android:gravity="center"
+            android:text=""
+            android:textSize="26dp" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginLeft="20dp"
+            android:layout_marginRight="20dp"
+            android:layout_marginBottom="8dp"
+            android:background="@color/colorGrey" />
+    </LinearLayout>
+
+
+    <LinearLayout
+        android:id="@+id/ll_keyboard"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="1dp"
+        android:background="@android:color/white"
+        android:orientation="vertical">
+
+        <View style="@style/KeyboardViewHorStyle" />
+
+        <LinearLayout
+            style="@style/LayoutStyle"
+            android:layout_height="wrap_content"
+            android:layout_weight="1">
+
+            <TextView
+                android:id="@+id/id_tv_1"
+                style="@style/KeyboardNumberStyle"
+                android:layout_height="match_parent"
+                android:text="" />
+
+            <View style="@style/KeyboardViewVerStyle" />
+
+            <TextView
+                android:id="@+id/id_tv_2"
+                style="@style/KeyboardNumberStyle"
+                android:text="" />
+
+            <View style="@style/KeyboardViewVerStyle" />
+
+            <TextView
+                android:id="@+id/id_tv_3"
+                style="@style/KeyboardNumberStyle"
+                android:text="" />
+
+        </LinearLayout>
+
+        <View style="@style/KeyboardViewHorStyle" />
+
+        <LinearLayout
+            style="@style/LayoutStyle"
+            android:layout_height="wrap_content"
+            android:layout_weight="1">
+
+            <TextView
+                android:id="@+id/id_tv_4"
+                style="@style/KeyboardNumberStyle"
+                android:text="" />
+
+            <View style="@style/KeyboardViewVerStyle" />
+
+            <TextView
+                android:id="@+id/id_tv_5"
+                style="@style/KeyboardNumberStyle"
+                android:text="" />
+
+            <View style="@style/KeyboardViewVerStyle" />
+
+            <TextView
+                android:id="@+id/id_tv_6"
+                style="@style/KeyboardNumberStyle"
+                android:text="" />
+
+        </LinearLayout>
+
+        <View style="@style/KeyboardViewHorStyle" />
+
+        <LinearLayout
+            style="@style/LayoutStyle"
+            android:layout_height="wrap_content"
+            android:layout_weight="1">
+
+            <TextView
+                android:id="@+id/id_tv_7"
+                style="@style/KeyboardNumberStyle"
+                android:text="" />
+
+            <View style="@style/KeyboardViewVerStyle" />
+
+            <TextView
+                android:id="@+id/id_tv_8"
+                style="@style/KeyboardNumberStyle"
+                android:text="" />
+
+            <View style="@style/KeyboardViewVerStyle" />
+
+            <TextView
+                android:id="@+id/id_tv_9"
+                style="@style/KeyboardNumberStyle"
+                android:text="" />
+
+        </LinearLayout>
+
+        <View style="@style/KeyboardViewHorStyle" />
+
+        <LinearLayout
+            style="@style/LayoutStyle"
+            android:layout_height="wrap_content"
+            android:layout_weight="1">
+
+            <LinearLayout
+                android:id="@+id/id_ll_delete"
+                style="@style/KeyboardNumberStyle">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:src="@drawable/icon_delete" />
+            </LinearLayout>
+
+            <View style="@style/KeyboardViewVerStyle" />
+
+            <TextView
+                android:id="@+id/id_tv_0"
+                style="@style/KeyboardNumberStyle"
+                android:text="" />
+
+            <View style="@style/KeyboardViewVerStyle" />
+
+            <TextView
+                android:id="@+id/id_tv_ok"
+                style="@style/KeyboardNumberStyle"
+                android:text="OK"
+                android:textColor="@color/colorClearPressBg"
+                android:textStyle="bold" />
+        </LinearLayout>
+
+        <View style="@style/KeyboardViewHorStyle" />
+    </LinearLayout>
+
+</LinearLayout>

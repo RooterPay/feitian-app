@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">CardReader</string>
+
+    <string name="error">Greška</string>
+    <string name="browser_error">Greška u pretraživaču</string>
+    <string name="pick_image">Odaberi sliku</string>
+    <string name="response_is_null">odgovor je prazan</string>
+    <string name="no_internet_connection">Nema internet konekcije</string>
+    <string name="error_message">"Poruka o grešci: "</string>
+
+    <string name="purchase">purchase</string>
+    <string name="cash">cash</string>
+    <string name="cashback">cashback</string>
+    <string name="refund">refund</string>
+
+</resources>
