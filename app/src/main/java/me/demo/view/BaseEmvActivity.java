@@ -20,7 +20,6 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.Surface;
 import android.view.WindowManager;
-import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
@@ -57,9 +56,10 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.nio.charset.StandardCharsets;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Timer;
@@ -122,96 +122,11 @@ public abstract class BaseEmvActivity extends AppCompatActivity implements SvrHe
 
     protected abstract void cancelTransaction();
 
-    private Socket socket;
-    private PrintWriter out;
-    private BufferedReader in;
-
-    public void listenSocket() {
-//Create socket connection
-        try {
-
-            socket = new Socket("195.66.185.22", 2502);
-            out = new PrintWriter(socket.getOutputStream(),
-                    true);
-
-            //u out treba dodati zaglavlja i cuda ostala
-
-            in = new BufferedReader(new InputStreamReader(
-                    socket.getInputStream()));
-            //u in se ocekuju rezultati
-
-        } catch (UnknownHostException e) {
-            System.out.println("Unknown host: kq6py");
-            System.exit(1);
-        } catch (IOException e) {
-            System.out.println("No I/O");
-            System.exit(1);
-        } catch (Exception e) {
-            System.out.println("No I/O");
-            System.exit(1);
-        }
-
-        List<String> hexList = Arrays.asList("60", "00", "15", "00", "00");
-        String tpdu = convertHexBytesToAsciiString(hexList);
-        out.println(tpdu);
-        System.out.println("-----------Text sent: " + tpdu);
-
-        try {
-            String line = in.readLine();
-            System.out.println("-----------Text received: " + line);
-        } catch (Exception e) {
-            System.out.println("------------Read failed");
-            System.exit(1);
-        }
-    }
-
-    public static String convertHexBytesToAsciiString(List<String> hexStrings) {
-        StringBuilder sb = new StringBuilder();
-        for (String hex : hexStrings) {
-
-            // Step 2: Convert hex string to integer (base 16)
-            int decimalValue = Integer.parseInt(hex, 16);
-
-            // Step 3: Format it as a hexadecimal value with 0x prefix
-            String hexFormatted = String.format("0x%02X", decimalValue);
-
-            // Step 4: Convert decimal to character
-            char character = (char) decimalValue;
-
-            // Step 5: Print each step
-            System.out.println("Input Hex String: " + hex);
-            System.out.println("Decimal Value: " + decimalValue);
-            System.out.println("Hex with Prefix: " + hexFormatted);
-            System.out.println("Corresponding Character: '" + character + "'");
-            System.out.println("-----------------------");
-            sb.append(character);
-        }
-        return sb.toString();
-    }
-
-    public void actionPerformed() {
-
-//Send data over socket
-//            String text = "textField.getText()";
-//            out.println(text);
-//Receive text from server
-
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         SvrHelper.instance().setServiceListener(this);
 
-        Thread one = new Thread(() -> {
-            try {
-                listenSocket();
-            } catch (Exception v) {
-                System.out.println(v);
-            }
-        });
-
-        one.start();
     }
 
     @Override
@@ -996,7 +911,7 @@ public abstract class BaseEmvActivity extends AppCompatActivity implements SvrHe
             Logger.d("onDisplayPanInfo, 6F:" + tag6F);
 
             String mA550 = iemv.getTlvList("A550");
-            String cardType = DecodeHelper.decode(mA550);
+            String cardType = DecodeHelper.decodeTLV(mA550);
 
             String m9F35 = iemv.getTlvList("9F35");
             String m9F1E = iemv.getTlvList("9F1E");
