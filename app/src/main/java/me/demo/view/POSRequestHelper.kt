@@ -17,7 +17,7 @@ object POSRequestHelper {
         val hilen = (temp.length / 256).toChar()
         val lowlen = (temp.length % 256).toChar()
 
-        val logonRequest = hilen.toString() + lowlen + temp
+        val logonRequest = "$hilen$lowlen$temp"
 
         println("-----------logonRequest: $logonRequest")
         return logonRequest
@@ -33,7 +33,7 @@ object POSRequestHelper {
         val hilen = (temp.length / 256).toChar()
         val lowlen = (temp.length % 256).toChar()
 
-        val handShakeRequest = hilen.toString() + lowlen + temp
+        val handShakeRequest = "$hilen$lowlen$temp"
 
         println("-----------handShake request: $handShakeRequest")
         return handShakeRequest
@@ -63,6 +63,7 @@ object POSRequestHelper {
         val currentTime = SimpleDateFormat("HHmmss", Locale.getDefault()).format(now)
         val messageType = "A"
         val messageSubType = "O"
+//        val transactionCode = "50" ili "95"
         val processingFlag1 = "1"
         val processingFlag2 = "5"
         val processingFlag3 = "0"
@@ -84,7 +85,7 @@ object POSRequestHelper {
             responseCode
         )
 
-        val headers = DecodeHelper.convertStringsToAscii(hexList)
+        val headers = DecodeHelper.appendStrings(hexList)
         //        System.out.println("-----------headers: " + headers);
         return headers
     }

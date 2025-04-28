@@ -31,13 +31,10 @@ public class DecodeHelper {
         return character;
     }
 
-    public static String convertStringsToAscii(List<String> string) {
+    public static String appendStrings(List<String> string) {
         StringBuilder sb = new StringBuilder();
         for (String txt : string) {
-//            for (char c : txt.toCharArray()) {
-//                int ascii = (int) c;
             sb.append(txt);
-//            }
         }
         return sb.toString();
     }

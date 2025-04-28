@@ -8,8 +8,6 @@ import com.ftpos.library.smartpos.emv.CandidateAIDInfo
 import com.ftpos.library.smartpos.errcode.ErrCode
 import com.ftpos.library.smartpos.util.EncodeConversionUtil
 import com.jirui.logger.Logger
-import com.ryccoatika.socketclient.SocketClient
-import com.ryccoatika.socketclient.SocketClientCallback
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -24,7 +22,6 @@ import java.io.DataInputStream
 import java.io.DataOutputStream
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
-import java.net.ServerSocket
 import java.net.Socket
 
 class MainActivity : BaseEmvActivity() {
@@ -36,41 +33,41 @@ class MainActivity : BaseEmvActivity() {
 
     private val port = 12345
 
-    private fun startServer() {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val serverSocket = ServerSocket(port)
-                println("------------🟢 Server started on port $port")
-
-                val clientSocket = serverSocket.accept()
-                println("------------🔵 Server accepted connection")
-
-                val input = DataInputStream(clientSocket.getInputStream())
-                val output = DataOutputStream(clientSocket.getOutputStream())
-
-                val length = input.readInt() // read message length
-                val messageBytes = ByteArray(length)
-                input.readFully(messageBytes) // read full message
-
-                val message = String(messageBytes)
-                println("------------📥 Server received: $message")
-
-                // Send response
-                val response = "Hello from server!"
-                println("------------📥 Server sent: $message")
-
-                val responseBytes = message.toByteArray()
-                output.writeInt(responseBytes.size)
-                output.write(responseBytes)
-
-                clientSocket.close()
-                serverSocket.close()
-                println("------------🛑 Server closed")
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
+//    private fun startServer() {
+//        CoroutineScope(Dispatchers.IO).launch {
+//            try {
+//                val serverSocket = ServerSocket(port)
+//                println("------------🟢 Server started on port $port")
+//
+//                val clientSocket = serverSocket.accept()
+//                println("------------🔵 Server accepted connection")
+//
+//                val input = DataInputStream(clientSocket.getInputStream())
+//                val output = DataOutputStream(clientSocket.getOutputStream())
+//
+//                val length = input.readInt() // read message length
+//                val messageBytes = ByteArray(length)
+//                input.readFully(messageBytes) // read full message
+//
+//                val message = String(messageBytes)
+//                println("------------📥 Server received: $message")
+//
+//                // Send response
+//                val response = "Hello from server!"
+//                println("------------📥 Server sent: $message")
+//
+//                val responseBytes = message.toByteArray()
+//                output.writeInt(responseBytes.size)
+//                output.write(responseBytes)
+//
+//                clientSocket.close()
+//                serverSocket.close()
+//                println("------------🛑 Server closed")
+//            } catch (e: Exception) {
+//                e.printStackTrace()
+//            }
+//        }
+//    }
 
     private fun startClient() {
         CoroutineScope(Dispatchers.IO).launch {
@@ -132,11 +129,30 @@ class MainActivity : BaseEmvActivity() {
                     val text = String(buffer, 0, charsRead)
                     println("------------📥 Client received: $text")
 
-                    val cleaned = text.filter { it.isLetterOrDigit() || it.isWhitespace() || it in listOf('.', '`', 'T') }
-//                    println("------------Parsed: $cleaned")
+//                    val z = text.replace(" ", "x")
+//                    println("------------📥 Client received with x: $z")
+//
+//                    convertToHex(text)
 
-                    startHandShake(writer)
+                    val logonResponse = "AO50"
+                    val handShakeResponse = "AO95"
+                    val success = "000"
+                    val approvedAT = "007"
 
+                    if (text.contains(logonResponse)) {
+                        val parts = text.split(logonResponse)
+                        val responseCodes = parts[1]
+                        if (responseCodes.contains(success) && responseCodes.contains(approvedAT)) {
+                            startHandShake(writer)
+                        }
+                    } else if (text.contains(handShakeResponse)) {
+                        val parts = text.split(handShakeResponse)
+                        val responseCodes = parts[1]
+                        if (responseCodes.contains(success) && responseCodes.contains(approvedAT)) {
+                            println("------------ handshake uspjesan")
+                        }
+
+                    }
                 }
 
                 socket.close()
@@ -147,41 +163,23 @@ class MainActivity : BaseEmvActivity() {
         }
     }
 
+    private fun convertToHex(text: String) {
+        val sb = StringBuilder()
+        text.forEach { it ->
+            it.toString().toByteArray().forEach { byte ->
+                sb.append("%02X ".format(byte))
+            }
+        }
+
+        println("------------hex: ${sb.trim()}")
+    }
+
     private fun startHandShake(writer: BufferedWriter) {
 
         val handShakeRequest = createHandShakeRequest()
         println("------------📥 Client sent: $handShakeRequest")
         writer.write(handShakeRequest)
         writer.flush()
-    }
-
-    private fun newSocketClient() {
-
-        val socketClient = SocketClient("195.66.185.22", 2500)
-        socketClient.setSocketClientCallback(object : SocketClientCallback {
-            override fun onConnected() {
-                // when connected to the server
-                println("------------ onConnected")
-                socketClient.sendMessage(createLogonRequest())
-            }
-
-            override fun onConnectionFailure(e: Exception) {
-                println("------------ onConnectionFailure")
-                // any failure occurs would be thrown here
-            }
-
-            override fun onDisconnected() {
-                println("------------ onDisconnected")
-                // called when client call disconnect() or server has gone
-            }
-
-            override fun onMessageReceived(message: String) {
-                println("------------ onMessageReceived")
-                // message received from server
-            }
-        })
-        socketClient.connect()
-
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -193,11 +191,7 @@ class MainActivity : BaseEmvActivity() {
 //            startTransaction(amount, transactionType)
         }
 
-//        CoroutineScope(Dispatchers.IO).launch {
-//            newSocketClient()
-//        }
-
-        startServer()
+//        startServer()
 
         // Delay slightly to make sure server is ready
         CoroutineScope(Dispatchers.IO).launch {
