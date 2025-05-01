@@ -1,4 +1,4 @@
-package me.demo.view;
+package me.demo.helpers;
 
 import java.util.List;
 

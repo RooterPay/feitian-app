@@ -3,8 +3,6 @@ package me.demo.helpers
 import me.demo.helpers.POSRequestHelper.createTPDU
 import me.demo.helpers.POSRequestHelper.delimiter
 import me.demo.helpers.POSRequestHelper.endChar
-import me.demo.view.DecodeHelper
-import me.demo.view.DecodeHelper.convertHexBytesToAsciiString
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -21,7 +19,6 @@ object LogonRequestHelper {
         val lowlen = (temp.length % 256).toChar()
 
         val logonRequest = "$hilen$lowlen$temp"
-
         println("-----------logonRequest: $logonRequest")
         return logonRequest
     }

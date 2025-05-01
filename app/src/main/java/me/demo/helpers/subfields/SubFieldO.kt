@@ -1,7 +1,7 @@
-package me.demo.helpers.fields
+package me.demo.helpers.subfields
 
 import com.ftpos.library.smartpos.emv.Emv
-import me.demo.view.DecodeHelper
+import me.demo.helpers.DecodeHelper
 
 data class SubFieldO(
     val subFieldO_emv01: String,

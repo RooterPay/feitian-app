@@ -3,11 +3,10 @@ package me.demo.helpers
 import me.demo.helpers.POSRequestHelper.createTPDU
 import me.demo.helpers.POSRequestHelper.delimiter
 import me.demo.helpers.POSRequestHelper.endChar
-import me.demo.helpers.fields.SubFieldO
-import me.demo.helpers.fields.SubFieldP
-import me.demo.view.DecodeHelper
-import me.demo.view.DecodeHelper.appendStrings
-import me.demo.view.DecodeHelper.convertHexBytesToAsciiString
+import me.demo.helpers.subfields.SubFieldO
+import me.demo.helpers.subfields.SubFieldP
+import me.demo.helpers.DecodeHelper.appendStrings
+import me.demo.helpers.fields.Field6
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -27,7 +26,6 @@ object TransactionRequestHelper {
         val lowlen = (temp.length % 256).toChar()
 
         val transactionRequest = "$hilen$lowlen$temp"
-
         println("-----------transaction request: $transactionRequest")
         return transactionRequest
     }
@@ -79,7 +77,7 @@ object TransactionRequestHelper {
         val fieldD = "D0"
         val fieldP = "P1"
         val fieldS = "S353647"
-        val fieldd = "dMAESTRO" //fixme
+        val fieldd = "d" + "MAESTRO" //fixme
         val fielde = "e00"
         val fieldh = "h0010070201"
         val fieldq = "q;6799998900000060018=2512201012345678?"
@@ -87,8 +85,7 @@ object TransactionRequestHelper {
 
         val subFieldE = ".E071" //07 contactless, 1 pin entry
         val subFieldI = ".I978" //currency code, euro
-
-        val field6 = "6$subFieldE$subFieldI$subFieldO$subFieldP"
+        val field6 = Field6(subFieldE, subFieldI, subFieldO, subFieldP)
 
         val fields = appendStrings(
             listOf(
@@ -109,11 +106,10 @@ object TransactionRequestHelper {
                 fieldq,
                 delimiter.toString(),
 //                fieldG,
-                field6
+                field6.toString()
             )
         )
         return fields
-
     }
 
 }

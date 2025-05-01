@@ -1,6 +1,6 @@
 package me.demo.helpers
 
-import me.demo.view.DecodeHelper.convertHexBytesToAsciiString
+import me.demo.helpers.DecodeHelper.convertHexBytesToAsciiString
 
 object POSRequestHelper {
 

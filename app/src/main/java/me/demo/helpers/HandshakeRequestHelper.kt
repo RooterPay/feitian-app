@@ -1,10 +1,7 @@
 package me.demo.helpers
 
-import me.demo.helpers.POSRequestHelper.delimiter
 import me.demo.helpers.POSRequestHelper.endChar
-import me.demo.view.DecodeHelper
-import me.demo.view.DecodeHelper.appendStrings
-import me.demo.view.DecodeHelper.convertHexBytesToAsciiString
+import me.demo.helpers.DecodeHelper.appendStrings
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -20,7 +17,6 @@ object HandshakeRequestHelper {
         val lowlen = (temp.length % 256).toChar()
 
         val handShakeRequest = "$hilen$lowlen$temp"
-
         println("-----------handShake request: $handShakeRequest")
         return handShakeRequest
     }

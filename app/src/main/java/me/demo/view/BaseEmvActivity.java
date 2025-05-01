@@ -9,8 +9,6 @@ import static com.ftpos.library.smartpos.keymanager.KeyType.KEY_TYPE_PEK;
 import static com.ftpos.library.smartpos.printer.AlignStyle.PRINT_STYLE_CENTER;
 import static com.ftpos.library.smartpos.printer.AlignStyle.PRINT_STYLE_LEFT;
 
-import static me.demo.view.DecodeHelper.decodeTLV;
-
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -70,8 +68,8 @@ import me.demo.bean.XmlDataBean;
 import me.demo.constants.ICardType;
 import me.demo.constants.IParamType;
 import me.demo.enums.TransactionType;
-import me.demo.helpers.fields.SubFieldO;
-import me.demo.helpers.fields.SubFieldP;
+import me.demo.helpers.subfields.SubFieldO;
+import me.demo.helpers.subfields.SubFieldP;
 import me.demo.pinpad.IPinpadCode;
 import me.demo.pinpad.PinpadDialog;
 import me.demo.pinpad.RFLogoDialog;
@@ -117,6 +115,10 @@ public abstract class BaseEmvActivity extends AppCompatActivity implements SvrHe
     private final String TAG = "=======TAG=======";
 
     protected abstract void cancelTransaction();
+
+    //    protected abstract void doAppSelect(List<CandidateAIDInfo> list);
+//    protected abstract void doEndProcess(int code, String data);
+    protected abstract void handleCardData(SubFieldO subFieldO, SubFieldP subFieldP);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -797,12 +799,6 @@ public abstract class BaseEmvActivity extends AppCompatActivity implements SvrHe
 
     }
 
-    protected abstract void doAppSelect(List<CandidateAIDInfo> list);
-
-    protected abstract void doEndProcess(int code, String data);
-
-    protected abstract void onDisplayInfo(SubFieldO subFieldO, SubFieldP subFieldP);
-
     /**
      * EMV callback process
      */
@@ -818,7 +814,7 @@ public abstract class BaseEmvActivity extends AppCompatActivity implements SvrHe
             Logger.i("AID List: " + list.size());
 
             //Simulations: Select an application from the list of AID candidates list
-            doAppSelect(list);
+//            doAppSelect(list);
         }
 
         /**
@@ -875,7 +871,7 @@ public abstract class BaseEmvActivity extends AppCompatActivity implements SvrHe
          */
         @Override
         public void onEndProcess(int code, String data) {
-            doEndProcess(code, data);
+//            doEndProcess(code, data);
         }
 
         /**
@@ -886,7 +882,7 @@ public abstract class BaseEmvActivity extends AppCompatActivity implements SvrHe
         public void onDisplayPanInfo(String s) {
             Logger.d("onDisplayPanInfo, PAN:" + s);
 
-            onDisplayInfo(
+            handleCardData(
                     SubFieldO.createSubFieldO(iemv),
                     SubFieldP.createSubFieldP(iemv)
             );
