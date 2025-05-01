@@ -13,13 +13,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import me.demo.enums.TransactionType
-import me.demo.view.POSRequestHelper.createHandShakeRequest
-import me.demo.view.POSRequestHelper.createLogonRequest
+import me.demo.helpers.HandshakeRequestHelper.createHandShakeRequest
+import me.demo.helpers.LogonRequestHelper.createLogonRequest
+import me.demo.helpers.Preferences
+import me.demo.helpers.fields.SubFieldO
+import me.demo.helpers.fields.SubFieldP
+import me.demo.helpers.TransactionRequestHelper.createTransactionRequest
 import me.dvabi.terminal.databinding.ActivityMainBinding
 import java.io.BufferedReader
 import java.io.BufferedWriter
-import java.io.DataInputStream
-import java.io.DataOutputStream
 import java.io.InputStreamReader
 import java.io.OutputStreamWriter
 import java.net.Socket
@@ -31,95 +33,17 @@ class MainActivity : BaseEmvActivity() {
 
     private val amount = "5"
 
-    private val port = 12345
-
-//    private fun startServer() {
-//        CoroutineScope(Dispatchers.IO).launch {
-//            try {
-//                val serverSocket = ServerSocket(port)
-//                println("------------🟢 Server started on port $port")
-//
-//                val clientSocket = serverSocket.accept()
-//                println("------------🔵 Server accepted connection")
-//
-//                val input = DataInputStream(clientSocket.getInputStream())
-//                val output = DataOutputStream(clientSocket.getOutputStream())
-//
-//                val length = input.readInt() // read message length
-//                val messageBytes = ByteArray(length)
-//                input.readFully(messageBytes) // read full message
-//
-//                val message = String(messageBytes)
-//                println("------------📥 Server received: $message")
-//
-//                // Send response
-//                val response = "Hello from server!"
-//                println("------------📥 Server sent: $message")
-//
-//                val responseBytes = message.toByteArray()
-//                output.writeInt(responseBytes.size)
-//                output.write(responseBytes)
-//
-//                clientSocket.close()
-//                serverSocket.close()
-//                println("------------🛑 Server closed")
-//            } catch (e: Exception) {
-//                e.printStackTrace()
-//            }
-//        }
-//    }
-
-    private fun startClient() {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-//                val socket = Socket("195.66.185.22", 2500)
-                val socket = Socket("127.0.0.1", port)
-                println("------------🔗 Client connected")
-
-                val output = DataOutputStream(socket.getOutputStream())
-                val input = DataInputStream(socket.getInputStream())
-
-                val request = createLogonRequest()
-                println("------------📥 Client sent: $request")
-
-//                val message = "Hello from client!"
-//                println("------------📥 Client sent: $message")
-
-                val messageBytes = request.toByteArray()
-
-                output.writeInt(messageBytes.size) // send length
-                output.write(messageBytes)         // send data
-
-                val responseLength2 = input.readUTF()
-                val responseLength = input.readInt()
-                val responseBytes = ByteArray(responseLength)
-                input.readFully(responseBytes)
-
-                val response = String(responseBytes)
-                println("------------📥 Client received: $response")
-
-//                socket.close()
-                println("------------🛑 Client closed")
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }
-    }
+    private lateinit var writer: BufferedWriter
 
     private fun startClient2() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val socket = Socket("195.66.185.22", 2500)
-//                val socket = Socket("127.0.0.1", port)
                 println("------------🔗 Client connected to server")
 
-                val writer = BufferedWriter(OutputStreamWriter(socket.getOutputStream()))
+                writer = BufferedWriter(OutputStreamWriter(socket.getOutputStream()))
 
-                val logonRequest = createLogonRequest()
-                println("------------📥 Client sent: $logonRequest")
-//
-                writer.write(logonRequest)
-                writer.flush()
+                startLogon()
 
                 val reader = BufferedReader(InputStreamReader(socket.getInputStream()))
                 val buffer = CharArray(1024)
@@ -128,11 +52,6 @@ class MainActivity : BaseEmvActivity() {
                 while (reader.read(buffer).also { charsRead = it } != -1) {
                     val text = String(buffer, 0, charsRead)
                     println("------------📥 Client received: $text")
-
-//                    val z = text.replace(" ", "x")
-//                    println("------------📥 Client received with x: $z")
-//
-//                    convertToHex(text)
 
                     val logonResponse = "AO50"
                     val handShakeResponse = "AO95"
@@ -143,15 +62,14 @@ class MainActivity : BaseEmvActivity() {
                         val parts = text.split(logonResponse)
                         val responseCodes = parts[1]
                         if (responseCodes.contains(success) && responseCodes.contains(approvedAT)) {
-                            startHandShake(writer)
+                            startHandShake()
                         }
                     } else if (text.contains(handShakeResponse)) {
                         val parts = text.split(handShakeResponse)
                         val responseCodes = parts[1]
                         if (responseCodes.contains(success) && responseCodes.contains(approvedAT)) {
-                            println("------------ handshake uspjesan")
+                            println("------------ handshake success")
                         }
-
                     }
                 }
 
@@ -163,23 +81,32 @@ class MainActivity : BaseEmvActivity() {
         }
     }
 
-    private fun convertToHex(text: String) {
-        val sb = StringBuilder()
-        text.forEach { it ->
-            it.toString().toByteArray().forEach { byte ->
-                sb.append("%02X ".format(byte))
-            }
-        }
+    private fun startLogon() {
+        val logonRequest = createLogonRequest()
+        println("------------📥 Client sent: $logonRequest")
 
-        println("------------hex: ${sb.trim()}")
+        writer.write(logonRequest)
+        writer.flush()
+
+        Preferences.incrementTransmissionID()
     }
 
-    private fun startHandShake(writer: BufferedWriter) {
-
+    private fun startHandShake() {
         val handShakeRequest = createHandShakeRequest()
         println("------------📥 Client sent: $handShakeRequest")
         writer.write(handShakeRequest)
         writer.flush()
+        Preferences.incrementTransmissionID()
+    }
+
+    private fun startTransaction(subFieldO: SubFieldO, subFieldP: SubFieldP) {
+
+        val transactionRequest = createTransactionRequest(subFieldO, subFieldP)
+        println("------------📥 Client sent: $transactionRequest")
+        writer.write(transactionRequest)
+        writer.flush()
+
+        Preferences.incrementTransmissionID()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -188,7 +115,7 @@ class MainActivity : BaseEmvActivity() {
         setContentView(binding.root)
 
         binding.startBtn.setOnClickListener {
-//            startTransaction(amount, transactionType)
+            startTransaction(amount, transactionType)
         }
 
 //        startServer()
@@ -210,7 +137,7 @@ class MainActivity : BaseEmvActivity() {
         if (list.isNullOrEmpty()) return
         Handler(Looper.getMainLooper())
             .post {
-                val listApp: MutableList<String?> = ArrayList()
+                val listApp: MutableList<String> = ArrayList()
                 //Get the application name that needs to be displayed from CandidateAID
                 for (i in list.indices) {
                     listApp.add(
@@ -230,8 +157,8 @@ class MainActivity : BaseEmvActivity() {
     }
 
     //ovo treba da se zove kad se zavrsi transakcija
-    override fun doEndProcess(code: Int, data: String?) {
-        Toast.makeText(this, "zavrrsena transakcija", Toast.LENGTH_SHORT).show()
+    override fun doEndProcess(code: Int, data: String) {
+        Toast.makeText(this, "zavrsena transakcija", Toast.LENGTH_SHORT).show()
 
         Logger.d("onEndProcess: 0x" + Integer.toHexString(code) + " - " + ErrCode.toString(code))
         //            iemv.respondEvent(null);
@@ -242,4 +169,9 @@ class MainActivity : BaseEmvActivity() {
 //        led.ledCardIndicator(0x00, 0x00, 0x00, 0x00)
 //        led.ledCardIndicator(0x00, 0x00, 0x00, 0x00)
     }
+
+    override fun onDisplayInfo(subFieldO: SubFieldO, subFieldP: SubFieldP) {
+        startTransaction(subFieldO, subFieldP)
+    }
+
 }

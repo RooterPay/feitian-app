@@ -9,6 +9,8 @@ import static com.ftpos.library.smartpos.keymanager.KeyType.KEY_TYPE_PEK;
 import static com.ftpos.library.smartpos.printer.AlignStyle.PRINT_STYLE_CENTER;
 import static com.ftpos.library.smartpos.printer.AlignStyle.PRINT_STYLE_LEFT;
 
+import static me.demo.view.DecodeHelper.decodeTLV;
+
 import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -49,17 +51,9 @@ import com.jirui.logger.Logger;
 
 import org.xmlpull.v1.XmlPullParserException;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.Socket;
-import java.net.UnknownHostException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Timer;
@@ -76,6 +70,8 @@ import me.demo.bean.XmlDataBean;
 import me.demo.constants.ICardType;
 import me.demo.constants.IParamType;
 import me.demo.enums.TransactionType;
+import me.demo.helpers.fields.SubFieldO;
+import me.demo.helpers.fields.SubFieldP;
 import me.demo.pinpad.IPinpadCode;
 import me.demo.pinpad.PinpadDialog;
 import me.demo.pinpad.RFLogoDialog;
@@ -263,17 +259,7 @@ public abstract class BaseEmvActivity extends AppCompatActivity implements SvrHe
 
         }
 
-        TransRequest transRequest = new TransRequest(transactionType.getCode())
-                .setmCurrencyCode("0784")
-                .setCardType(cardSupport)
-                .setVerifyPinSkip(false)
-                .setMagTransQuickPass(false)
-                .setMagTransServiceCodeProcess(true)
-                .setMaxTimeoutEMVThreadWait(30)
-                .setReadRecordCallback(true)
-                .setEnableAppSelectCallback(true)
-                .setNeedBeep(false)
-                .setSeePhoneContinueTrans(isSeePhone);
+        TransRequest transRequest = new TransRequest(transactionType.getCode()).setmCurrencyCode("0784").setCardType(cardSupport).setVerifyPinSkip(false).setMagTransQuickPass(false).setMagTransServiceCodeProcess(true).setMaxTimeoutEMVThreadWait(30).setReadRecordCallback(true).setEnableAppSelectCallback(true).setNeedBeep(false).setSeePhoneContinueTrans(isSeePhone);
         transRequest.setAdditionalTlvData("1F300101");
 
         updateDockLCD(transactionType.getTitle(this).toUpperCase(), "Amt:" + formatAmount, "in trading ...");
@@ -628,8 +614,7 @@ public abstract class BaseEmvActivity extends AppCompatActivity implements SvrHe
         BytesTypeValue bValue = new BytesTypeValue();
         //This method is used to load IPEK (Initial PIN Encryption Key) to the key store.
         //in the case that ipek is in plaintext form, the protectKeyIndex must be 0x00.
-        ret = ikey.loadDukptIpek(KEY_TYPE_IPEK, keyIndex, SYM_ARITH_3DES,
-                0x00, 0x00, bKeyValue, bKsnValue, bValue);
+        ret = ikey.loadDukptIpek(KEY_TYPE_IPEK, keyIndex, SYM_ARITH_3DES, 0x00, 0x00, bKeyValue, bKsnValue, bValue);
         if (ret != ERR_SUCCESS) {
             Logger.e("load IPEK (Initial PIN Encryption Key) fail, Code [" + Integer.toHexString(ret) + " ]：" + ErrCode.toString(ret));
             return false;
@@ -676,8 +661,7 @@ public abstract class BaseEmvActivity extends AppCompatActivity implements SvrHe
         int pekIndex = 0x0001;
         String pekValue = "592CA5782DE0EED7BB23037D2C79123E";
         byte[] bPekValue = BytesUtil.hexString2Bytes(pekValue);
-        ret = ikey.loadSymKey(KEY_TYPE_PEK, pekIndex, SYM_ARITH_3DES,
-                KEY_TYPE_MK, mkIndex, bPekValue, bPekValue.length, bytesValue);
+        ret = ikey.loadSymKey(KEY_TYPE_PEK, pekIndex, SYM_ARITH_3DES, KEY_TYPE_MK, mkIndex, bPekValue, bPekValue.length, bytesValue);
         if (ret != ERR_SUCCESS) {
             Logger.e("load PEK fail, Code [" + Integer.toHexString(ret) + " ]：" + ErrCode.toString(ret));
             return false;
@@ -769,12 +753,9 @@ public abstract class BaseEmvActivity extends AppCompatActivity implements SvrHe
      */
     private void doInputPin(int cvmFlag, int type, Long amount) {
         if (!emvRunning) return;
-        PosSystem.getInstance(this)
-                .enableTurningOffScreen(false, 60);
+        PosSystem.getInstance(this).enableTurningOffScreen(false, 60);
 
-        int angle = ((WindowManager) this
-                .getSystemService(Context.WINDOW_SERVICE))
-                .getDefaultDisplay().getRotation();
+        int angle = ((WindowManager) this.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getRotation();
         switch (angle) {
             case Surface.ROTATION_90:
                 this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
@@ -802,25 +783,25 @@ public abstract class BaseEmvActivity extends AppCompatActivity implements SvrHe
             bundle.putString("PwdHint", "Enter PIN");
         }
         updateDockLCD(null, null, "Enter pin ...");
-        new Handler(Looper.getMainLooper())
-                .post(() -> {
-                    mPinpadDialog = new PinpadDialog(BaseEmvActivity.this, new Intent().putExtras(bundle), new PinpadDialog.PinpadResultListener() {
-                        @Override
-                        public void onPinpadResultListener(int code, String data) {
-                            PosSystem.getInstance(BaseEmvActivity.this)
-                                    .enableTurningOffScreen(true, 0);
-                            BaseEmvActivity.this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
-                            handlePinpadResult(code, data);
-                        }
-                    });
-                    mPinpadDialog.show();
-                });
+        new Handler(Looper.getMainLooper()).post(() -> {
+            mPinpadDialog = new PinpadDialog(BaseEmvActivity.this, new Intent().putExtras(bundle), new PinpadDialog.PinpadResultListener() {
+                @Override
+                public void onPinpadResultListener(int code, String data) {
+                    PosSystem.getInstance(BaseEmvActivity.this).enableTurningOffScreen(true, 0);
+                    BaseEmvActivity.this.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR);
+                    handlePinpadResult(code, data);
+                }
+            });
+            mPinpadDialog.show();
+        });
 
     }
 
     protected abstract void doAppSelect(List<CandidateAIDInfo> list);
 
     protected abstract void doEndProcess(int code, String data);
+
+    protected abstract void onDisplayInfo(SubFieldO subFieldO, SubFieldP subFieldP);
 
     /**
      * EMV callback process
@@ -847,9 +828,7 @@ public abstract class BaseEmvActivity extends AppCompatActivity implements SvrHe
         @Override
         public void onPinEntry(int cvm) {
             Logger.d("onPinEntry:" + cvm);
-            if ((cvm & (Emv.EMV_CVMFLAG_PLOFFLINE_PIN_SIGN
-                    | Emv.EMV_CVMFLAG_OLPIN_SIGN
-                    | Emv.EMV_CVMFLAG_ENOFFLINE_PIN_SIGN)) == 0) {
+            if ((cvm & (Emv.EMV_CVMFLAG_PLOFFLINE_PIN_SIGN | Emv.EMV_CVMFLAG_OLPIN_SIGN | Emv.EMV_CVMFLAG_ENOFFLINE_PIN_SIGN)) == 0) {
                 iemv.respondEvent(null);
                 prePINPhase = false;
             } else {
@@ -906,108 +885,114 @@ public abstract class BaseEmvActivity extends AppCompatActivity implements SvrHe
         @Override
         public void onDisplayPanInfo(String s) {
             Logger.d("onDisplayPanInfo, PAN:" + s);
-            String tag6F = iemv.getTlvList("6F");
-            Log.d(TAG, "onDisplayPanInfo_6F: " + tag6F);
-            Logger.d("onDisplayPanInfo, 6F:" + tag6F);
 
-            String mA550 = iemv.getTlvList("A550");
-            String cardType = DecodeHelper.decodeTLV(mA550);
+            onDisplayInfo(
+                    SubFieldO.createSubFieldO(iemv),
+                    SubFieldP.createSubFieldP(iemv)
+            );
 
-            String m9F35 = iemv.getTlvList("9F35");
-            String m9F1E = iemv.getTlvList("9F1E");
-            String m9F40 = iemv.getTlvList("9F40");
-
-            String m9F06 = iemv.getTlvList("9F06");
-            String m1F14 = iemv.getTlvList("1F14");
-            String m1F04 = iemv.getTlvList("1F04");
-            String m1F05 = iemv.getTlvList("1F05");
-            String m1F06 = iemv.getTlvList("1F06");
-            String m5F2A = iemv.getTlvList("5F2A");
-            String m9F1A = iemv.getTlvList("9F1A");
-            String m9F33 = iemv.getTlvList("9F33");
-
-            String condition = iemv.getTlvList("1F16");
-
-//            if(condition.equals("1")) {
-            String m1F07 = iemv.getTlvList("1F07");
-            String m1F08 = iemv.getTlvList("1F08");
-            String m1F09 = iemv.getTlvList("1F09");
-            String m9F1B = iemv.getTlvList("9F1B");
-//            }
-
-            //MASTERCARD
-            if (cardType.toLowerCase().contains("mastercard")) {
-                Log.d("------", "MASTERCARD");
-//                String m9F06 = iemv.getTlvList("m9F06");
-                String m1F60 = iemv.getTlvList("1F60");
-//                String m1F14 = iemv.getTlvList("1F14");
-//                String m5F2A = iemv.getTlvList("5F2A");
-                String m5F36 = iemv.getTlvList("5F36");
-//                String m9F40 = iemv.getTlvList("9F40");
-//                String m9F1E = iemv.getTlvList("9F1E");
-                String m9F16 = iemv.getTlvList("9F16");
-                String m9F4E = iemv.getTlvList("9F4E");
-                String m9F1C = iemv.getTlvList("9F1C");
-//                String m9F35 = iemv.getTlvList("9F35");
-
-                String m1F62 = iemv.getTlvList("1F62");
-                if (m1F62.isEmpty()) {
-                    String m9f35 = iemv.getTlvList("9F35");
-                    String m9C = iemv.getTlvList("9C");
-                }
-            }
-
-            //VISA
-            if (cardType.toLowerCase().contains("visa")) {
-                Log.d("------", "VISA");
-//                String m9F06 = iemv.getTlvList("m9F06");
-//                String m1F60 = iemv.getTlvList("1F60");
-//                String m1F14 = iemv.getTlvList("1F14");
-                String m9F66 = iemv.getTlvList("9f35");
-//                String m5F2A = iemv.getTlvList("5F2A");
-                String m5F36 = iemv.getTlvList("5F36");
-//                String m9F1E = iemv.getTlvList("9F1E");
-//                String m9F35 = iemv.getTlvList("9F35");
-//                String m9F1A = iemv.getTlvList("9F1A");
-                String m9F4E = iemv.getTlvList("9F4E");
-
-                String m1F62 = iemv.getTlvList("1F62");
-
-                if (m1F62.isEmpty()) {
-//                    String m1F62 = iemv.getTlvList("9F35");
-                    String m9C = iemv.getTlvList("9C");
-                }
-
-            }
-
-
-            //AMEX
-
-//            String m9F06 = iemv.getTlvList("9F06");
-            String m1F60 = iemv.getTlvList("1F60");
-//            String m1F14 = iemv.getTlvList("1F14");
-
+//            String tag6F = iemv.getTlvList("6F");
+//            Log.d(TAG, "onDisplayPanInfo_6F: " + tag6F);
+//            Logger.d("onDisplayPanInfo, 6F:" + tag6F);
+//
+//            String mA550 = iemv.getTlvList("A550");
+//            String cardType = DecodeHelper.decodeTLV(mA550);
+//
+//            String m9F35 = iemv.getTlvList("9F35");
 //            String m9F1E = iemv.getTlvList("9F1E");
-            String m9F09 = iemv.getTlvList("9f35");
-//            String m9F40 = iemv.getTlvList("m9F40");
-            String m9F6D = iemv.getTlvList("9f35");
-            String m9F6E = iemv.getTlvList("9f35");
-            String m1F40 = iemv.getTlvList("9f35");
-
-            //            if(m1F62.isEmpty()) {
-//            String m1F62 = iemv.getTlvList("9F35");
-//            String m9C = iemv.getTlvList("9C");
+//            String m9F40 = iemv.getTlvList("9F40");
+//
+//            String m9F06 = iemv.getTlvList("9F06");
+//            String m1F14 = iemv.getTlvList("1F14");
+//            String m1F04 = iemv.getTlvList("1F04");
+//            String m1F05 = iemv.getTlvList("1F05");
+//            String m1F06 = iemv.getTlvList("1F06");
+//            String m5F2A = iemv.getTlvList("5F2A");
+//            String m9F1A = iemv.getTlvList("9F1A");
+//            String m9F33 = iemv.getTlvList("9F33");
+//
+//            String condition = iemv.getTlvList("1F16");
+//
+////            if(condition.equals("1")) {
+//            String m1F07 = iemv.getTlvList("1F07");
+//            String m1F08 = iemv.getTlvList("1F08");
+//            String m1F09 = iemv.getTlvList("1F09");
+//            String m9F1B = iemv.getTlvList("9F1B");
+////            }
+//
+//            //MASTERCARD
+//            if (cardType.toLowerCase().contains("mastercard")) {
+//                Log.d("------", "MASTERCARD");
+////                String m9F06 = iemv.getTlvList("m9F06");
+//                String m1F60 = iemv.getTlvList("1F60");
+////                String m1F14 = iemv.getTlvList("1F14");
+////                String m5F2A = iemv.getTlvList("5F2A");
+//                String m5F36 = iemv.getTlvList("5F36");
+////                String m9F40 = iemv.getTlvList("9F40");
+////                String m9F1E = iemv.getTlvList("9F1E");
+//                String m9F16 = iemv.getTlvList("9F16");
+//                String m9F4E = iemv.getTlvList("9F4E");
+//                String m9F1C = iemv.getTlvList("9F1C");
+////                String m9F35 = iemv.getTlvList("9F35");
+//
+//                String m1F62 = iemv.getTlvList("1F62");
+//                if (m1F62.isEmpty()) {
+//                    String m9f35 = iemv.getTlvList("9F35");
+//                    String m9C = iemv.getTlvList("9C");
+//                }
 //            }
-
-            //DISCOVER
-            //SVE VEC IMAMO GORE
-
-            String dukpt = "";
-            String mAmount = "";
-            String mTransType = "";
-
-
-            System.out.println("----");
+//
+//            //VISA
+//            if (cardType.toLowerCase().contains("visa")) {
+//                Log.d("------", "VISA");
+////                String m9F06 = iemv.getTlvList("m9F06");
+////                String m1F60 = iemv.getTlvList("1F60");
+////                String m1F14 = iemv.getTlvList("1F14");
+//                String m9F66 = iemv.getTlvList("9f35");
+////                String m5F2A = iemv.getTlvList("5F2A");
+//                String m5F36 = iemv.getTlvList("5F36");
+////                String m9F1E = iemv.getTlvList("9F1E");
+////                String m9F35 = iemv.getTlvList("9F35");
+////                String m9F1A = iemv.getTlvList("9F1A");
+//                String m9F4E = iemv.getTlvList("9F4E");
+//
+//                String m1F62 = iemv.getTlvList("1F62");
+//
+//                if (m1F62.isEmpty()) {
+////                    String m1F62 = iemv.getTlvList("9F35");
+//                    String m9C = iemv.getTlvList("9C");
+//                }
+//
+//            }
+//
+//
+//            //AMEX
+//
+////            String m9F06 = iemv.getTlvList("9F06");
+//            String m1F60 = iemv.getTlvList("1F60");
+////            String m1F14 = iemv.getTlvList("1F14");
+//
+////            String m9F1E = iemv.getTlvList("9F1E");
+//            String m9F09 = iemv.getTlvList("9f35");
+////            String m9F40 = iemv.getTlvList("m9F40");
+//            String m9F6D = iemv.getTlvList("9f35");
+//            String m9F6E = iemv.getTlvList("9f35");
+//            String m1F40 = iemv.getTlvList("9f35");
+//
+//            //            if(m1F62.isEmpty()) {
+////            String m1F62 = iemv.getTlvList("9F35");
+////            String m9C = iemv.getTlvList("9C");
+////            }
+//
+//            //DISCOVER
+//            //SVE VEC IMAMO GORE
+//
+//            String dukpt = "";
+//            String mAmount = "";
+//            String mTransType = "";
+//
+//
+//            System.out.println("----");
         }
 
         /**
@@ -1019,15 +1004,11 @@ public abstract class BaseEmvActivity extends AppCompatActivity implements SvrHe
             // Perform the search card operation
             Logger.i("Build.MODEL:" + Build.MODEL); //ovo je model uredjaja
             //
-            if (Build.MODEL.equals("M200")
-                    || Build.MODEL.equals("F310")
-                    || Build.MODEL.equals("F310P")
-                    || Build.MODEL.equals("F360")) {
-                new Handler(Looper.getMainLooper())
-                        .post(() -> {
-                            mRFLogoDialog = new RFLogoDialog(BaseEmvActivity.this);
-                            mRFLogoDialog.show();
-                        });
+            if (Build.MODEL.equals("M200") || Build.MODEL.equals("F310") || Build.MODEL.equals("F310P") || Build.MODEL.equals("F360")) {
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    mRFLogoDialog = new RFLogoDialog(BaseEmvActivity.this);
+                    mRFLogoDialog.show();
+                });
             }
             List<LedConfig> colorList = new ArrayList<>();
             colorList.add(new LedConfig(TapLampColor.Breath.RED_0, TapLampColor.Breath.GREEN_0, TapLampColor.Breath.BLUE_0));
@@ -1054,15 +1035,11 @@ public abstract class BaseEmvActivity extends AppCompatActivity implements SvrHe
              * The EMV contactless transaction performs the update operation of the issuing bank.
              * The card search must be a contactless card. If a contact card or entry is used, an error will be reported.
              */
-            if (Build.MODEL.equals("M200")
-                    || Build.MODEL.equals("F310")
-                    || Build.MODEL.equals("F310P")
-                    || Build.MODEL.equals("F360")) {
-                new Handler(Looper.getMainLooper())
-                        .post(() -> {
-                            mRFLogoDialog = new RFLogoDialog(BaseEmvActivity.this);
-                            mRFLogoDialog.show();
-                        });
+            if (Build.MODEL.equals("M200") || Build.MODEL.equals("F310") || Build.MODEL.equals("F310P") || Build.MODEL.equals("F360")) {
+                new Handler(Looper.getMainLooper()).post(() -> {
+                    mRFLogoDialog = new RFLogoDialog(BaseEmvActivity.this);
+                    mRFLogoDialog.show();
+                });
             }
             led.readerLedStatus(0x03, false, false, true);
             updateDockLCD(null, null, "Present card");
@@ -1146,6 +1123,7 @@ public abstract class BaseEmvActivity extends AppCompatActivity implements SvrHe
             return amount;
         }
     };
+
 
     /**
      * Require online PIN

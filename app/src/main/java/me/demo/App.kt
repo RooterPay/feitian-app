@@ -1,29 +1,32 @@
-package me.demo;
+package me.demo
 
-import android.app.Application;
-
+import android.app.Application
 
 /**
  * @author GuoJirui.
  * @date 2021/4/25.
  * @desc
  */
-public class App extends Application {
+class App : Application() {
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
+    companion object {
+        private lateinit var _instance: App
+        val instance: App
+            get() = _instance
+    }
+
+    override fun onCreate() {
+        super.onCreate()
+        _instance = this
         //Initialize and bind the service through the service helper class
-        SvrHelper.instance().init(this);
-        SvrHelper.instance().bindService();
+        SvrHelper.instance().init(this)
+        SvrHelper.instance().bindService()
     }
 
 
-    @Override
-    public void onTerminate() {
-        super.onTerminate();
+    override fun onTerminate() {
+        super.onTerminate()
         //Unbind the service through the service helper class
-        SvrHelper.instance().unbindService();
+        SvrHelper.instance().unbindService()
     }
-
 }
