@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">CardReader</string>
+    <string name="app_name">POS Terminal</string>
 
     <string name="error">Greška</string>
     <string name="browser_error">Greška u pretraživaču</string>
