@@ -7,9 +7,12 @@ import androidx.core.widget.addTextChangedListener
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import me.demo.enums.TransactionCode
 import me.demo.enums.TransactionType
+import me.demo.helpers.DecodeHelper.decodeServerResponse
 import me.demo.helpers.HandshakeRequestHelper.createHandShakeRequest
 import me.demo.helpers.LogonRequestHelper
+import me.demo.helpers.ParsedResponse
 import me.demo.helpers.Preferences
 import me.demo.helpers.TransactionRequestHelper.createTransactionRequest
 import me.demo.helpers.subfields.SubFieldO
@@ -59,65 +62,69 @@ class MainActivity : BaseEmvActivity() {
         sendTransactionRequest(subFieldO, subFieldP)
     }
 
-    private fun startClient() {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val socket = Socket("195.66.185.22", 2500)
-                println("------------🔗 Client connected to server")
+    private fun startClient() = CoroutineScope(Dispatchers.IO).launch {
+        try {
+            val socket = Socket("195.66.185.22", 2500)
+            println("------------🔗 Client connected to server")
 
-                writer = BufferedWriter(OutputStreamWriter(socket.getOutputStream()))
+            writer = BufferedWriter(OutputStreamWriter(socket.getOutputStream()))
 
-                val reader = BufferedReader(InputStreamReader(socket.getInputStream()))
-                val buffer = CharArray(1024)
-                var charsRead: Int
+            val reader = BufferedReader(InputStreamReader(socket.getInputStream()))
+            val buffer = CharArray(1024)
+            var charsRead: Int
 
-                while (reader.read(buffer).also { charsRead = it } != -1) {
-                    val text = String(buffer, 0, charsRead)
-                    println("------------📥 Client received: $text")
+            while (reader.read(buffer).also { charsRead = it } != -1) {
+                val text = String(buffer, 0, charsRead)
+                println("------------📥 Client received: $text")
+                val decodedResponse = decodeServerResponse(text)
+                parseResponse(decodedResponse)
+            }
 
-                    val logonResponse = "AO50"
-                    val handShakeResponse = "AO95"
-                    val transactionResponse = "FO"
-                    val success = "000"
-                    val approvedAT = "007"
+            socket.close()
+            println("------------🛑 Client closed connection")
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
 
-                    //fixme
-                    if (text.contains(logonResponse)) {
-                        val parts = text.split(logonResponse)
-                        val responseCodes = parts[1]
-                        if (responseCodes.contains(success) && responseCodes.contains(approvedAT)) {
-                            sendHandShakeRequest()
-                        }
-                    } else if (text.contains(handShakeResponse)) {
-                        val parts = text.split(handShakeResponse)
-                        val responseCodes = parts[1]
-                        if (responseCodes.contains(success) && responseCodes.contains(approvedAT)) {
-                            println("------------ handshake success")
-                            runOnUiThread {
-                                binding.enterAmount.isVisible = true
-                                binding.startLogon.isVisible = false
-                            }
-                        }
-                    } else if (text.contains(transactionResponse)) {
-                        if (text.contains("gAPPROVED")) {
-                            println("------------ transaction success")
-                            runOnUiThread {
-                                binding.enterAmount.setText("")
-                                binding.enterAmount.clearFocus()
-                                Toast.makeText(
-                                    this@MainActivity,
-                                    "Transaction completed successfully",
-                                    Toast.LENGTH_SHORT
-                                ).show()
-                            }
-                        }
-                    }
+    private fun parseResponse(response: ParsedResponse) = runOnUiThread {
+        when (response.getType()) {
+            TransactionCode.ERROR -> {
+                println("------------ error")
+                Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show()
+            }
+
+            TransactionCode.LOGON -> {
+                if (response.isSuccessful()) {
+                    sendHandShakeRequest()
+                } else {
+                    Toast.makeText(this, "Logon Error", Toast.LENGTH_SHORT).show()
                 }
+            }
 
-                socket.close()
-                println("------------🛑 Client closed connection")
-            } catch (e: Exception) {
-                e.printStackTrace()
+            TransactionCode.HANDSHAKE -> {
+                if (response.isSuccessful()) {
+                    println("------------ handshake success")
+                    binding.enterAmount.isVisible = true
+                    binding.startLogon.isVisible = false
+                } else {
+                    Toast.makeText(this, "Handshake Error", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            TransactionCode.TRANSACTION -> {
+                if (response.isSuccessful()) {
+                    println("------------ transaction success")
+                    binding.enterAmount.setText("")
+                    binding.enterAmount.clearFocus()
+                    Toast.makeText(
+                        this@MainActivity,
+                        "Transaction completed successfully",
+                        Toast.LENGTH_SHORT
+                    ).show()
+                } else {
+                    Toast.makeText(this, "Transaction Error", Toast.LENGTH_SHORT).show()
+                }
             }
         }
     }
