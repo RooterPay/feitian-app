@@ -14,27 +14,27 @@ object DecodeHelper {
         val messageLength = hilen * 256 + lowlen
 
         //-2, hilen,lowlen at the start
-//        if (text.length - 2 == messageLength) {
-        val header = text.substring(
-            controlCharsWithTPDULength,
-            controlCharsWithTPDULength + headerResponseLength
-        )
-        val transactionCode = header.substring(40, 42)
-        val responseCode = header.takeLast(3)
+        if (text.length - 2 == messageLength) {
+            val header = text.substring(
+                controlCharsWithTPDULength,
+                controlCharsWithTPDULength + headerResponseLength
+            )
+            val transactionCode = header.substring(40, 42)
+            val responseCode = header.takeLast(3)
 
-        val fields = text.substringAfter(header)
-        var gValue = ""
-        if (fields.isNotEmpty() && fields.contains(delimiter)) {
-            val parts = fields.split(delimiter)
-            parts.find { it.startsWith("g") }?.let {
-                gValue = it.drop(1)
+            val fields = text.substringAfter(header)
+            var gValue = ""
+            if (fields.isNotEmpty() && fields.contains(delimiter)) {
+                val parts = fields.split(delimiter)
+                parts.find { it.startsWith("g") }?.let {
+                    gValue = it.drop(1)
+                }
             }
-        }
 
-        return ParsedResponse(transactionCode, responseCode, gValue)
-//        } else {
-//            return ParsedResponse("-1")
-//        }
+            return ParsedResponse(transactionCode, responseCode, gValue)
+        } else {
+            return ParsedResponse("-1")
+        }
     }
 
     fun decodeTLV(data: String): String {
