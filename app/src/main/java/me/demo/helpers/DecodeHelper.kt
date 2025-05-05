@@ -14,7 +14,7 @@ object DecodeHelper {
         val messageLength = hilen * 256 + lowlen
 
         //-2, hilen,lowlen at the start
-        if (text.length - 2 == messageLength) {
+//        if (text.length - 2 == messageLength) {
             val header = text.substring(
                 controlCharsWithTPDULength,
                 controlCharsWithTPDULength + headerResponseLength
@@ -32,9 +32,9 @@ object DecodeHelper {
             }
 
             return ParsedResponse(transactionCode, responseCode, gValue)
-        } else {
-            return ParsedResponse("-1")
-        }
+//        } else {
+//            return ParsedResponse("-1")
+//        }
     }
 
     fun decodeTLV(data: String): String {
