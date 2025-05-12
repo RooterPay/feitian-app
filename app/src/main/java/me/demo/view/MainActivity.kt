@@ -36,12 +36,12 @@ class MainActivity : BaseEmvActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        startClient()
+    }
+
+    private fun setupViews() {
         binding.startLogon.setOnClickListener {
-            if (this::writer.isInitialized) {
-                sendLogonRequest()
-            } else {
-                Toast.makeText(this, "writer not initialized yet", Toast.LENGTH_SHORT).show()
-            }
+            sendLogonRequest()
         }
         binding.startTransaction.setOnClickListener {
             startTransaction(binding.enterAmount.text.toString(), transactionType)
@@ -50,8 +50,6 @@ class MainActivity : BaseEmvActivity() {
         binding.enterAmount.addTextChangedListener {
             binding.startTransaction.isVisible = it.toString().isNotEmpty()
         }
-
-        startClient()
     }
 
     override fun cancelTransaction() {
@@ -68,6 +66,7 @@ class MainActivity : BaseEmvActivity() {
             println("------------🔗 Client connected to server")
 
             writer = BufferedWriter(OutputStreamWriter(socket.getOutputStream()))
+            setupViews()
 
             val reader = BufferedReader(InputStreamReader(socket.getInputStream()))
             val buffer = CharArray(1024)
